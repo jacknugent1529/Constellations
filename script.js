@@ -249,7 +249,9 @@ viewer = new Viewer(c, constellations, 1.4417, 0.061, 0.31733, 1);
 window.addEventListener('resize', () => viewer.resize(), false);
 
 
-drag = false;
+let drag = false;
+let pinch = false;
+let pinch_dist = 0;
 let drag_x = 0;
 let drag_y = 0;
 c.addEventListener('mousedown', e => {
@@ -273,6 +275,12 @@ c.addEventListener('wheel', e => {
 });
 
 c.addEventListener('touchstart', e => {
+  if (e.touches.length == 2) {
+    drag = false;
+    pinch = true;
+    pinch_dist = Math.sqrt((e.touches[0].offsetX - e.touches[1].offsetX)**2 
+                         + (e.touches[0].offsetY**2-e.touches[1].offsetY)**2);
+  }
   drag = true;
   drag_x = e.touches[0].clientX;
   drag_y = e.touches[0].clientY;
@@ -287,10 +295,21 @@ c.addEventListener("touchmove", e => {
     drag_x = e.touches[0].clientX;
     drag_y = e.touches[0].clientY;
   }
+  if (pinch) {
+    if (e.touches.length > 1) {
+      let dist = Math.sqrt((e.touches[0].offsetX - e.touches[1].offsetX)**2 
+                         + (e.touches[0].offsetY**2-e.touches[1].offsetY)**2);
+      viewer.zoom(dist > pinch_dist, pinch_dist/dist * 2);
+      pinch_dist = dist;
+    } else {
+      pinch = false;
+    }
+  }
 });
 
 c.addEventListener('touchend', () => {
   drag = false;
+  pinch = false;
 });
 
 c.addEventListener('keydown', event => {
