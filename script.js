@@ -1,4 +1,3 @@
-
 class Viewer {
   constructor(canvas, constellations, dir_azi = 0, dir_pol = 0, fov = Math.PI/12,
               scroll_speed = 1) {
@@ -25,11 +24,17 @@ class Viewer {
     this.draw()
   }
 
-  zoom(zoom_in = true) {
+  zoom(zoom_in = true, speed = 1) {
     if (zoom_in) {
-      this.fov /= 1.1
+      this.fov /= 1 + (.1 * speed)
+      if (this.fov < Math.PI/20) {
+        this.fov = Math.PI/20;
+      }
     } else {
-      this.fov *= 1.1;
+      this.fov *= 1 + (.1 * speed);
+      if (this.fov > 50*Math.PI/180) {
+        this.fov = 50*Math.PI/180;
+      }
     }
     this.distance_to_plane = 1/Math.tan(this.fov);
     this.fov_azi = Math.atan(this.aspect/this.distance_to_plane);
@@ -262,6 +267,10 @@ c.addEventListener('mousemove', e => {
     drag_y = e.offsetY;
   };
 });
+c.addEventListener('wheel', e => {
+  e.preventDefault();
+  viewer.zoom(e.deltaY > 0, 0.3)
+});
 
 c.addEventListener('touchstart', e => {
   drag = true;
@@ -274,7 +283,7 @@ c.addEventListener("touchmove", e => {
     e.preventDefault();
     let dx = e.touches[0].clientX - drag_x;
     let dy = e.touches[0].clientY - drag_y;
-    viewer.shiftDir(dx, dy);
+    viewer.shiftDir(2*dx, 2*dy);
     drag_x = e.touches[0].clientX;
     drag_y = e.touches[0].clientY;
   }
@@ -300,9 +309,9 @@ c.addEventListener('keydown', event => {
     viewer.shiftTheta(-10*Math.PI/180, 0);
   }
   if (event.code == "ArrowUp") {
-    viewer.shiftTheta(0, -10*Math.PI/180);
+    viewer.shiftTheta(0, 10*Math.PI/180);
   }
   if (event.code == "ArrowDown") {
-    viewer.shiftTheta(0, 10*Math.PI/180);
+    viewer.shiftTheta(0, -10*Math.PI/180);
   }
 });
