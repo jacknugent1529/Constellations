@@ -1,6 +1,6 @@
 
 class Viewer {
-  constructor(canvas, constellations, dir_azi = 0, dir_pol = 0, fov = Math.PI/6,
+  constructor(canvas, constellations, dir_azi = 0, dir_pol = 0, fov = Math.PI/12,
               scroll_speed = 1) {
     this.c = canvas;
     this.constellations = constellations;
@@ -14,6 +14,8 @@ class Viewer {
     this.aspect = c.width/c.height;
     this.distance_to_plane = 1/Math.tan(this.fov);
     this.fov_azi = Math.atan(this.aspect/this.distance_to_plane);
+    this.height = window.innerHeight;
+    this.width = window.innerWidth;
 
     this.resize();
   }
@@ -41,16 +43,19 @@ class Viewer {
   }
 
   resize() {
-    this.c.width = window.innerWidth;
-    this.c.height = window.innerHeight;
+    this.c.width = window.innerWidth * devicePixelRatio;
+    this.c.height = window.innerHeight * devicePixelRatio;
+    this.ctx.scale(devicePixelRatio, devicePixelRatio);
+    this.c.style.width = window.innerWidth + 'px';
+    this.c.style.height = window.innerHeight + 'px';
     this.aspect = c.width/c.height;
     this.fov_azi = Math.atan(this.aspect/this.distance_to_plane);
     this.update();
   }
 
   shiftDir(dx, dy) {
-    let dazi_dx = this.fov_azi/this.c.width;
-    let dpolar_dy = this.fov/this.c.height;
+    let dazi_dx = this.fov_azi/this.width;
+    let dpolar_dy = this.fov/this.height;
     this.dir_azi += dazi_dx*dx*2*this.scroll_speed;
     this.dir_pol += dpolar_dy*dy*2*this.scroll_speed;
     this.dir_azi = positive_angle(this.dir_azi);
@@ -77,11 +82,11 @@ class Viewer {
     }
 
     let y = this.distance_to_plane * Math.tan(this.dir_pol - polar);
-    y = (y + 1)/2 * this.c.height;
+    y = (y + 1)/2 * this.height;
 
     let x = this.distance_to_plane * Math.tan(this.dir_azi - azi);
     x /= this.aspect;
-    x = (x + 1)/2 * this.c.width;
+    x = (x + 1)/2 * this.width;
     return [x,y, in_fov];
   }
 
@@ -125,7 +130,6 @@ class Viewer {
   }
 
   drawLine(azi1, polar1, azi2, polar2, width=2.5) {
-    //width = Math.random() * (4 - 2) + 2
     let [x1,y1] = this.sphereToRect(azi1, polar1);
     let [x2,y2] = this.sphereToRect(azi2, polar2);
     if (!this.lineVisible(azi1, polar1, azi2, polar2)) {
@@ -226,52 +230,19 @@ function parseJSON(json) {
   return jsonData.map(json_to_constellation);
 }
 
-
 let c = document.getElementById("canvas");
 c.setAttribute("tabindex", 0);
 c.focus();
 
 
-cas_deg = [[ 2.29,59.15],
-           [10.13,56.54],
-           [14.17,60.72],
-           [21.45,60.23],
-           [28.59,63.67]];
-
-cas = cas_deg.map(row => row.map(x => x*Math.PI/180));
-
-cas_stars = cas.map(coord => new Star(coord[0], coord[1]));
-
-cas_lines = [[0,1],
-             [1,2],
-             [2,3],
-             [3,4]];
-
-cas_constellation = new Constellation(cas_stars, cas_lines, 'Cassiopeia', 'Cas');
-
-test = new Constellation([new Star(0,0), new Star(Math.PI/6, 0)], [[0,1]], "test", "tst");
-
 constellations = parseJSON(constellations_json);
-//viewer = new Viewer(c, [cas_constellation], 0.1745, 1.0472, Math.PI/6, 1);
-viewer = new Viewer(c, constellations, 0.1745, 1.0472, Math.PI/6, 1);
-//viewer = new Viewer(c, [test], -2*Math.PI/180, 0, Math.PI/6, 1);
-
-
-
-
-
+viewer = new Viewer(c, constellations, 1.4417, 0.061, 0.31733, 1);
 
 
 //controls
 
-window.addEventListener('resize', () => resizeCanvas(viewer), false);
+window.addEventListener('resize', () => viewer.resize(), false);
 
-function resizeCanvas(viewer) {
-  //console.log(`width: ${c.width}`);
-  c.width = window.innerWidth;
-  c.height = window.innerHeight;
-  viewer.resize()
-}
 
 drag = false;
 let drag_x = 0;
