@@ -24,6 +24,17 @@ class Viewer {
     this.draw()
   }
 
+  pinch_zoom(ratio) {
+    this.c.style.backgroundColor = '#32a852';
+    this.fov *= ratio;
+    if (this.fov < Math.PI/20) {
+      this.fov = Math.PI/20;
+    } else if (this.fov > 50*Math.PI/180) {
+      this.fov = 50*Math.PI/180;
+    }
+
+  }
+
   zoom(zoom_in = true, speed = 1) {
     if (zoom_in) {
       this.fov /= 1 + (.1 * speed)
@@ -299,7 +310,7 @@ c.addEventListener("touchmove", e => {
     if (e.touches.length > 1) {
       let dist = Math.sqrt((e.touches[0].offsetX - e.touches[1].offsetX)**2 
                          + (e.touches[0].offsetY**2-e.touches[1].offsetY)**2);
-      viewer.zoom(dist > pinch_dist, pinch_dist/dist/1.1);
+      viewer.pinch_zoom(dist/pinch_dist);
       pinch_dist = dist;
     } else {
       pinch = false;
