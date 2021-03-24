@@ -24,14 +24,17 @@ class Viewer {
     this.draw()
   }
 
-  pinch_zoom(ratio) {
-    this.c.style.backgroundColor = '#32a852';
-    this.fov *= ratio;
+  pinch_zoom(dist1, dist2) {
+    this.fov *= dist2/dist1;
     if (this.fov < Math.PI/20) {
       this.fov = Math.PI/20;
     } else if (this.fov > 50*Math.PI/180) {
       this.fov = 50*Math.PI/180;
     }
+    this.distance_to_plane = 1/Math.tan(this.fov);
+    this.fov_azi = Math.atan(this.aspect/this.distance_to_plane);
+
+    this.update();
 
   }
 
@@ -289,8 +292,8 @@ c.addEventListener('touchstart', e => {
   if (e.touches.length == 2) {
     drag = false;
     pinch = true;
-    pinch_dist = Math.sqrt((e.touches[0].offsetX - e.touches[1].offsetX)**2 
-                         + (e.touches[0].offsetY**2-e.touches[1].offsetY)**2);
+    pinch_dist = Math.sqrt((e.touches[0].clientX - e.touches[1].clientX)**2 
+                         + (e.touches[0].clientY-e.touches[1].clientY)**2);
   }
   drag = true;
   drag_x = e.touches[0].clientX;
@@ -307,10 +310,11 @@ c.addEventListener("touchmove", e => {
     drag_y = e.touches[0].clientY;
   }
   if (pinch) {
+    drag=false;
     if (e.touches.length > 1) {
-      let dist = Math.sqrt((e.touches[0].offsetX - e.touches[1].offsetX)**2 
-                         + (e.touches[0].offsetY**2-e.touches[1].offsetY)**2);
-      viewer.pinch_zoom(dist/pinch_dist);
+      let dist = Math.sqrt((e.touches[0].clientX - e.touches[1].clientX)**2 
+                         + (e.touches[0].clientY-e.touches[1].clientY)**2);
+      viewer.pinch_zoom(dist,pinch_dist);
       pinch_dist = dist;
     } else {
       pinch = false;
