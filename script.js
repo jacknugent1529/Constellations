@@ -299,7 +299,7 @@ c.addEventListener("touchmove", e => {
     if (e.touches.length > 1) {
       let dist = Math.sqrt((e.touches[0].offsetX - e.touches[1].offsetX)**2 
                          + (e.touches[0].offsetY**2-e.touches[1].offsetY)**2);
-      viewer.zoom(dist > pinch_dist, pinch_dist/dist * 2);
+      viewer.zoom(dist > pinch_dist, pinch_dist/dist/1.1);
       pinch_dist = dist;
     } else {
       pinch = false;
