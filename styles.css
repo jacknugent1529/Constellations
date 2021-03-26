@@ -1,11 +1,71 @@
+:root {
+  --background: #070B34;
+}
 
 * { margin:0; padding:0; }
 
 html, body { width: 100%, height: 100%}
 
+body {
+  font-family: 'Orbitron', sans-serif;
+  background-color: var(--background);
+  color: white;
+}
+
+p {
+  font-family: sans-serif;
+}
+
 canvas { 
   display:block;
-  background-color: #070B34;
+  background-color: var(--background);
   outline: none;
-  -webkit-tap-highlight-color: rgba(255,255,255,0);;
+  -webkit-tap-highlight-color: rgba(255,255,255,0);
 }
+
+.nav-container {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+}
+
+.nav-item {
+  float: left;
+  font-size: 20px;
+}
+
+.nav-item a {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 4px 4px;
+  margin: 4px 5px;
+  text-decoration: none;
+  position: relative;
+  color: white;
+}
+
+.nav-item a:hover {
+  color: white;
+}
+
+.nav-item a::before {
+  content: "";
+  position: absolute;
+  width: 84%;
+  height: 2px;
+  bottom: 0;
+  left: 8%;
+  background-color: white;
+  visibility: hidden;
+  transform: scaleX(0);
+  transition: all 0.3s ease-in-out 0s;
+}
+
+.nav-item a:hover::before {
+  visibility: visible;
+  transform: scaleX(1);
+}
+
+
