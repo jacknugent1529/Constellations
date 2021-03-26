@@ -292,7 +292,7 @@ c.focus();
 constellations_dict = JSON.parse(constellations_json);
 constellations_list = parseJSONdict(constellations_dict);
 
-let focus_abb = window.location.href.split('html')[1].slice(1);
+let focus_abb = window.location.href.slice(-3);
 let focus = constellations_dict[focus_abb];
 if (focus == undefined) {
   focus = constellations_dict['Ori']
