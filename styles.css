@@ -1,13 +1,146 @@
+
 :root {
   --background: #070B34;
 }
 
 * { margin:0; padding:0; }
 
-html, body { width: 100%, height: 100%}
+html, body { width: 100%; height: 100%}
 
 body {
+  background-color: var(--background);
+  overflow: overlay;
+  font-family: 'Montserrat', sans-serif;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+::-webkit-scrollbar{
+  background-color: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #d6dee1;
+  border-radius: 20px;
+  border: 6px solid transparent;
+  background-clip: content-box;
+}
+
+.rot90 {
+  transition: 0.3s;
+  transform: rotate(90deg);
+}
+
+.arrow {
+  transition: 0.3s;
+}
+
+.to-top-arrow {
+  position: relative;
+  bottom: 0.35em;
+  right: 0.42em;
+}
+
+.h3 {
   font-family: 'Orbitron', sans-serif;
+}
+
+.anchor {
+  scroll-margin-top: 60px;
+}
+
+#main {
+  overflow: hidden;
+}
+
+.constellation-link {
+  width: 500px;
+  height: 100%;
+}
+
+.bg-blue {
+  /*background-color: white !important;*/
+  background-color: var(--background);
+}
+
+.canvas-container {
+  height: 100%;
+}
+
+.constellation-container {
+  width: 100%;
+}
+
+canvas { 
+  display:block;
+  background-color: var(--background);
+  outline: none;
+  -webkit-tap-highlight-color: rgba(255,255,255,0);
+}
+
+.navbar {
+  font-family: 'Orbitron';
+}
+
+.nav-absolute {
+  position: absolute;
+  width: 100%;
+  top: 0px;
+}
+
+.custom-toggler .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255,255,255, 1)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 8h24M4 16h24M4 24h24'/%3E%3C/svg%3E");
+}
+
+.custom-toggler.navbar-toggler {
+  border-color: rgb(255,255,255);
+  box-shadow: none;
+} 
+
+h1,h2,h3,h4,h5,h6 {
+  font-family: 'Orbitron', sans-serif;
+}
+
+
+p {
+  font-family: 'Montserrat', sans-serif;
+}
+
+#back-to-top {
+  font-size: 20px;
+  width: 2em;
+  height: 2em;
+  position: fixed;
+  right: 0.75rem;
+  bottom: 0.25em;
+  background-color: rgba(255, 255, 255, 0.9);
+  background-color: transparent;
+  color: white;
+  border-color: white;
+  transition: 0.3s;
+  box-shadow: none;
+}
+
+#back-to-top:hover {
+  opacity: 0.6;
+}
+
+.hide-btn {
+  opacity: 0;
+}
+
+.show-btn {
+   opacity: 0.9;
+   transition: opacity 2s ease-in;
+   -moz-transition: opacity 2s ease-in;
+   -webkit-transition: opacity 2s ease-in;
+}
+
+
+
+/*
+body {
+  font-family: 'Montserrat', sans-serif;
   background-color: var(--background);
   color: white;
 }
@@ -32,10 +165,10 @@ canvas {
 
 .nav-item {
   float: left;
-  font-size: 20px;
 }
 
 .nav-item a {
+  font-size: 23px;
   display: block;
   color: white;
   text-align: center;
@@ -44,6 +177,7 @@ canvas {
   text-decoration: none;
   position: relative;
   color: white;
+  font-family: 'Orbitron';
 }
 
 .nav-item a:hover {
@@ -67,5 +201,4 @@ canvas {
   visibility: visible;
   transform: scaleX(1);
 }
-
 

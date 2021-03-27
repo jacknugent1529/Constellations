@@ -1,24 +1,123 @@
 class Viewer {
-  constructor(canvas, constellations, dir_azi = 0, dir_pol = 0, fov = Math.PI/12, fov_azi, scroll_speed = 1) {
+  constructor(canvas, constellations, dir_azi = 0, dir_pol = 0, fov = Math.PI/12, fov_azi, scroll_speed = 1, static_display = false) {
     this.c = canvas;
     this.constellations = constellations;
 
     this.dir_azi = -dir_azi;
     this.dir_pol = dir_pol;
-    this.ctx = c.getContext("2d");
+    this.ctx = this.c.getContext("2d");
     this.scroll_speed = scroll_speed;
 
     this.fov = fov;
     this.distance_to_plane = 1/Math.tan(this.fov);
 
-    this.height = window.innerHeight;
-    this.width = window.innerWidth;
+    //this.height = window.innerHeight;
+    //this.width = window.innerWidth;
+    
+    this.parent = canvas.parentElement;
+    this.height = this.parent.clientHeight;
+    this.width = this.parent.clientWidth;
+
+    if (!static_display) {
+      this.controls();
+    }
+    window.addEventListener('resize', () => this.resize(), false);
 
     this.resize(fov_azi);
   }
+
+  controls() {
+
+    let drag = false;
+    let pinch = false;
+    let pinch_dist = 0;
+    let drag_x = 0;
+    let drag_y = 0;
+    this.c.addEventListener('mousedown', e => {
+      drag = true; 
+      drag_x = e.offsetX;
+      drag_y = e.offsetY;
+    });
+    this.c.addEventListener('mouseup', () => {
+      drag = false;
+    });
+    this.c.addEventListener('mousemove', e => {
+      if(drag) {
+        this.shiftDir(e.offsetX-drag_x, e.offsetY - drag_y);
+        drag_x = e.offsetX;
+        drag_y = e.offsetY;
+      };
+    });
+    this.c.addEventListener('wheel', e => {
+      e.preventDefault();
+      this.zoom(e.deltaY > 0, 0.3)
+    });
+
+    this.c.addEventListener('touchstart', e => {
+      if (e.touches.length == 2) {
+        drag = false;
+        pinch = true;
+        pinch_dist = Math.sqrt((e.touches[0].clientX - e.touches[1].clientX)**2 
+                             + (e.touches[0].clientY-e.touches[1].clientY)**2);
+      }
+      drag = true;
+      drag_x = e.touches[0].clientX;
+      drag_y = e.touches[0].clientY;
+    });
+
+    this.c.addEventListener("touchmove", e => {
+      if (drag) {
+        e.preventDefault();
+        let dx = e.touches[0].clientX - drag_x;
+        let dy = e.touches[0].clientY - drag_y;
+        this.shiftDir(2*dx, 2*dy);
+        drag_x = e.touches[0].clientX;
+        drag_y = e.touches[0].clientY;
+      }
+      if (pinch) {
+        drag=false;
+        if (e.touches.length > 1) {
+          let dist = Math.sqrt((e.touches[0].clientX - e.touches[1].clientX)**2 
+                             + (e.touches[0].clientY-e.touches[1].clientY)**2);
+          this.pinch_zoom(dist,pinch_dist);
+          pinch_dist = dist;
+        } else {
+          pinch = false;
+        }
+      }
+    });
+
+    this.c.addEventListener('touchend', () => {
+      drag = false;
+      pinch = false;
+    });
+
+    this.c.addEventListener('keydown', event => {
+      if (event.code == "Equal") {
+        // zoom in
+        this.zoom();
+      }
+      if (event.code == "Minus") {
+        // zoom out
+        this.zoom(false);
+      }
+      if (event.code == "ArrowRight") {
+        this.shiftTheta(10*Math.PI/180, 0);
+      }
+      if (event.code == "ArrowLeft") {
+        this.shiftTheta(-10*Math.PI/180, 0);
+      }
+      if (event.code == "ArrowUp") {
+        this.shiftTheta(0, 10*Math.PI/180);
+      }
+      if (event.code == "ArrowDown") {
+        this.shiftTheta(0, -10*Math.PI/180);
+      }
+    });
+  }
   
   update() {
-    this.ctx.clearRect(0,0, canvas.width, canvas.height);
+    this.ctx.clearRect(0,0, this.c.width, this.c.height);
     this.draw()
   }
 
@@ -64,12 +163,16 @@ class Viewer {
   }
 
   resize(fov_azi=0) {
-    this.c.width = window.innerWidth * devicePixelRatio;
-    this.c.height = window.innerHeight * devicePixelRatio;
+    this.width = this.parent.clientWidth;
+    this.height = this.parent.clientHeight;
+    this.c.width = this.width * devicePixelRatio;
+    this.c.height = this.height * devicePixelRatio;
+
     this.ctx.scale(devicePixelRatio, devicePixelRatio);
-    this.c.style.width = window.innerWidth + 'px';
-    this.c.style.height = window.innerHeight + 'px';
-    this.aspect = c.width/c.height;
+    this.c.style.width = this.parent.clientWidth + 'px';
+    this.c.style.height = this.parent.clientHeight + 'px';
+
+    this.aspect = this.c.width/this.c.height;
     this.fov_azi = Math.atan(this.aspect/this.distance_to_plane);
     if (fov_azi != 0 && this.fov_azi < fov_azi) {
       this.fov = Math.atan(Math.tan(fov_azi)/this.aspect);
@@ -101,7 +204,12 @@ class Viewer {
     this.dir_azi += azi;
     this.dir_pol += polar;
     this.dir_azi = positive_angle(this.dir_azi);
-    this.dir_pol = positive_angle(this.dir_pol);
+    this.dir_pol = small_angle(this.dir_pol);
+    if (this.dir_pol < -Math.PI/2) {
+      this.dir_pol = -Math.PI/2;
+    } else if (this.dir_pol > Math.PI/2) {
+      this.dir_pol = Math.PI/2;
+    }
     this.update();
   }
 
@@ -166,7 +274,7 @@ class Viewer {
   label_spherical(azi, polar, label) {
     let [x,y,in_fov] = this.sphereToRect(azi, polar);
     if (in_fov) {
-      this.ctx.font = '16px monospace'
+      this.ctx.font = '18px Montserrat';
       this.ctx.fillText(label, x+20, y+20);
     }
   }
@@ -193,21 +301,28 @@ class Constellation {
     this.lines.forEach(line => {
       let star1 = this.stars[line[0]];
       let star2 = this.stars[line[1]];
-      viewer.drawLine(star1.azi, star1.polar, star2.azi, star2.polar);
+      let width = (star1.magnitudeToRadius() + star2.magnitudeToRadius()) * 2.0/(4*2)
+      viewer.drawLine(star1.azi, star1.polar, star2.azi, star2.polar, width);
     });
   }
 }
 
 class Star {
-  constructor(azimuth, polar, label = "") {
+  constructor(azimuth, polar, magnitude, label = "") {
     this.azi = azimuth;
     this.polar = polar;
     this.hasLabel = label != "";
     this.label = label;
+    this.magnitude = magnitude
+  }
+
+  magnitudeToRadius() {
+    let default_radius = 4;
+    return Math.pow(2.512**(3.63-this.magnitude), 0.125)*default_radius;
   }
   
   draw(viewer) {
-    viewer.drawPoint(this.azi, this.polar, 4);
+    viewer.drawPoint(this.azi, this.polar, this.magnitudeToRadius());
     if (this.hasLabel) {
       viewer.label_spherical(this.azi, this.polar, this.label);
     }
@@ -238,9 +353,9 @@ function matmul(a,b) {
     throw 'Dimension error';
   }
 
-  out = []
+  let out = []
   for(let i = 0; i < a.length; i++) {
-    row = []
+    let row = []
     for(let j = 0; j < b[0].length; j++) {
       let sum = 0;
       for(let k = 0; k < a[0].length; k++) {
@@ -253,13 +368,13 @@ function matmul(a,b) {
   return out;
 }
 
-let a =  [[1,2,3],
-          [4,5,6],
-          [7,8,9]];
+//let a =  [[1,2,3],
+          //[4,5,6],
+          //[7,8,9]];
 
-let b =  [[7,8,9],
-          [1,2,3],
-          [4,5,6]];
+//let b =  [[7,8,9],
+          //[1,2,3],
+          //[4,5,6]];
 
 
 function sphereToCartesian([r, azi, pol]) {
@@ -276,7 +391,7 @@ function cartesianToSphere([x,y,z]) {
 }
 
 function json_to_constellation(obj) {
-  stars = obj.stars.map(point => new Star(point[0], point[1]));
+  let stars = obj.stars.map(s => new Star(s[0], s[1], s[2]));
   return new Constellation(stars, obj.lines, obj.name, obj.abb, obj.middle, obj.bounds);
 }
 
@@ -284,115 +399,19 @@ function parseJSONdict(dict) {
   return Object.entries(dict).map(entry => json_to_constellation(entry[1]));
 }
 
-let c = document.getElementById("canvas");
-c.setAttribute("tabindex", 0);
-c.focus();
-
-
-constellations_dict = JSON.parse(constellations_json);
-constellations_list = parseJSONdict(constellations_dict);
-
-let focus_abb = window.location.href.slice(-3);
-let focus = constellations_dict[focus_abb];
-if (focus == undefined) {
-  focus = constellations_dict['Ori']
+function focusedViewer(json, focus_abb, canvas, scroll_speed=1, static_display=false) {
+  let const_dict = JSON.parse(json);
+  let const_list = parseJSONdict(const_dict);
+  let focus = const_dict[focus_abb];
+  if (focus == undefined) {
+    focus = const_dict['Ori']
+  }
+  let dir_azi = focus.stars[focus.middle][0];
+  let dir_pol = focus.stars[focus.middle][1];
+  let fov = focus.bounds[1]+2*Math.PI/180;
+  let fov_azi = focus.bounds[0]+2*Math.PI/180;
+  return new Viewer(canvas, const_list, dir_azi, dir_pol, fov, fov_azi, scroll_speed, static_display);
 }
-let dir_azi = focus.stars[focus.middle][0];
-let dir_pol = focus.stars[focus.middle][1];
-let fov = focus.bounds[1]+2*Math.PI/180;
-let fov_azi = focus.bounds[0]+2*Math.PI/180;
 
-viewer = new Viewer(c, constellations_list, dir_azi, dir_pol, fov, fov_azi, 1);
+export {focusedViewer, Viewer};
 
-
-//controls
-
-window.addEventListener('resize', () => viewer.resize(), false);
-
-
-let drag = false;
-let pinch = false;
-let pinch_dist = 0;
-let drag_x = 0;
-let drag_y = 0;
-c.addEventListener('mousedown', e => {
-  drag = true; 
-  drag_x = e.offsetX;
-  drag_y = e.offsetY;
-});
-c.addEventListener('mouseup', () => {
-  drag = false;
-});
-c.addEventListener('mousemove', e => {
-  if(drag) {
-    viewer.shiftDir(e.offsetX-drag_x, e.offsetY - drag_y);
-    drag_x = e.offsetX;
-    drag_y = e.offsetY;
-  };
-});
-c.addEventListener('wheel', e => {
-  e.preventDefault();
-  viewer.zoom(e.deltaY > 0, 0.3)
-});
-
-c.addEventListener('touchstart', e => {
-  if (e.touches.length == 2) {
-    drag = false;
-    pinch = true;
-    pinch_dist = Math.sqrt((e.touches[0].clientX - e.touches[1].clientX)**2 
-                         + (e.touches[0].clientY-e.touches[1].clientY)**2);
-  }
-  drag = true;
-  drag_x = e.touches[0].clientX;
-  drag_y = e.touches[0].clientY;
-});
-
-c.addEventListener("touchmove", e => {
-  if (drag) {
-    e.preventDefault();
-    let dx = e.touches[0].clientX - drag_x;
-    let dy = e.touches[0].clientY - drag_y;
-    viewer.shiftDir(2*dx, 2*dy);
-    drag_x = e.touches[0].clientX;
-    drag_y = e.touches[0].clientY;
-  }
-  if (pinch) {
-    drag=false;
-    if (e.touches.length > 1) {
-      let dist = Math.sqrt((e.touches[0].clientX - e.touches[1].clientX)**2 
-                         + (e.touches[0].clientY-e.touches[1].clientY)**2);
-      viewer.pinch_zoom(dist,pinch_dist);
-      pinch_dist = dist;
-    } else {
-      pinch = false;
-    }
-  }
-});
-
-c.addEventListener('touchend', () => {
-  drag = false;
-  pinch = false;
-});
-
-c.addEventListener('keydown', event => {
-  if (event.code == "Equal") {
-    // zoom in
-    viewer.zoom();
-  }
-  if (event.code == "Minus") {
-    // zoom out
-    viewer.zoom(false);
-  }
-  if (event.code == "ArrowRight") {
-    viewer.shiftTheta(10*Math.PI/180, 0);
-  }
-  if (event.code == "ArrowLeft") {
-    viewer.shiftTheta(-10*Math.PI/180, 0);
-  }
-  if (event.code == "ArrowUp") {
-    viewer.shiftTheta(0, 10*Math.PI/180);
-  }
-  if (event.code == "ArrowDown") {
-    viewer.shiftTheta(0, -10*Math.PI/180);
-  }
-});
