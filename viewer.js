@@ -11,9 +11,6 @@ class Viewer {
     this.fov = fov;
     this.distance_to_plane = 1/Math.tan(this.fov);
 
-    //this.height = window.innerHeight;
-    //this.width = window.innerWidth;
-    
     this.parent = canvas.parentElement;
     this.height = this.parent.clientHeight;
     this.width = this.parent.clientWidth;
@@ -345,9 +342,9 @@ function small_angle(theta) {
   return theta;
 }
 
-// [[1,2,3],
-//  [4,5,6],
-//  [7,8,9]]
+// format: [[1,2,3],
+//          [4,5,6],
+//          [7,8,9]]
 function matmul(a,b) {
   if (a[0].length != b.length) {
     throw 'Dimension error';
@@ -367,14 +364,6 @@ function matmul(a,b) {
   }
   return out;
 }
-
-//let a =  [[1,2,3],
-          //[4,5,6],
-          //[7,8,9]];
-
-//let b =  [[7,8,9],
-          //[1,2,3],
-          //[4,5,6]];
 
 
 function sphereToCartesian([r, azi, pol]) {

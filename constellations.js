@@ -24,23 +24,17 @@ window.start = () => {
   let const_canvases = document.getElementsByClassName('constellation-container')
   for (const container of const_canvases) {
     let abb = container.parentElement.parentElement.id;
-    //console.log(container.offsetWidth);
     container.style.height = 1/2*container.offsetWidth + 'px';
 
     let canvas = container.children[0];
-    //console.log(`container: ${container}`);
-
     viewers.push(focusedViewer(constellations_json, abb, canvas, 1, true));
   }
-  //let focus_abb = window.location.href.slice(-3);
-  //let viewer = focusedViewer(constellations_json, focus_abb, c);
 }
 
 const scrollToTopBtn = document.getElementById("back-to-top");
 
 function scrollFunc() {
   if (window.scrollY > window.innerHeight) {
-    //scrollToTopBtn.style.display='hidden';
     scrollToTopBtn.classList.add('show-btn');
   } else {
     scrollToTopBtn.classList.remove('show-btn');
@@ -61,5 +55,3 @@ window.toggleArrow = (obj) => {
     obj.classList.add('rot90');
   }
 }
-
-
