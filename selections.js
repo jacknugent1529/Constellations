@@ -32,9 +32,11 @@ function changeVis(con, vis=true) {
     if (vis) {
       totalVisible++;
       document.getElementById(con).classList.remove('d-none');
+      document.getElementById(`${con}-nav`).classList.remove('d-none');
     } else {
       totalVisible--;
       document.getElementById(con).classList.add('d-none');
+      document.getElementById(`${con}-nav`).classList.add('d-none');
     }
   }
 }
