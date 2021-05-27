@@ -1,5 +1,5 @@
 # Constellations
-
+This is a basic project using javascript to render a dynamic view of the stars in the night sky.
 
 ## Github Pages
 https://jacknugent1529.github.io/Constellations/
